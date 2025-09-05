@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sikkim Tourism Chatbot</title>
   <style>
-    /* General Styling */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -19,11 +18,6 @@
       color: white;
       padding: 20px;
       text-align: center;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 2.2em;
     }
 
     nav {
@@ -46,10 +40,6 @@
     main {
       padding: 30px;
       text-align: center;
-    }
-
-    main h2 {
-      color: #00695c;
     }
 
     .tourism-img {
@@ -84,6 +74,7 @@
       cursor: pointer;
       box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.2s;
+      z-index: 1001;
     }
 
     .chatbot-btn:hover {
@@ -103,6 +94,7 @@
       overflow: hidden;
       box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
       z-index: 1000;
+      background: white;
     }
 
     iframe {
@@ -111,16 +103,7 @@
       border: none;
     }
 
-    /* Responsive Design */
     @media (max-width: 768px) {
-      main {
-        padding: 15px;
-      }
-
-      .tourism-img {
-        max-height: 250px;
-      }
-
       #chatbot-container {
         width: 90%;
         height: 70%;
@@ -145,7 +128,8 @@
 
   <main>
     <h2>Discover Sikkim</h2>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Tsomgo_Lake%2C_Sikkim.jpg" alt="Sikkim Tourism" class="tourism-img">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Tsomgo_Lake%2C_Sikkim.jpg" 
+         alt="Sikkim Tourism" class="tourism-img">
     <p>
       Sikkim is a small but breathtakingly beautiful state in India, known for its majestic Himalayas, 
       rich culture, monasteries, and natural wonders. Our chatbot will guide you through your journey, 
@@ -162,7 +146,8 @@
 
   <!-- Chatbot Container -->
   <div id="chatbot-container">
-    <iframe src="https://www.chatbase.co/chatbot-iframe/WXJl80MOoH850gYH_yXdl"></iframe>
+    <iframe id="chatbot-frame" 
+            src="https://www.chatbase.co/chatbot-iframe/WXJl80MOoH850gYH_yXdl"></iframe>
   </div>
 
   <script>
@@ -170,8 +155,20 @@
       const chatbot = document.getElementById('chatbot-container');
       chatbot.style.display = chatbot.style.display === 'block' ? 'none' : 'block';
     }
+
+    // 🗣️ Make bot replies also speak
+    window.addEventListener("message", function(event) {
+      if (event.data && event.data.type === "bot-message") {
+        const reply = event.data.message;
+        console.log("Bot replied:", reply);
+
+        // Speak the reply
+        const speech = new SpeechSynthesisUtterance(reply);
+        speech.lang = "en-US";  // change to "hi-IN" for Hindi
+        window.speechSynthesis.speak(speech);
+      }
+    });
   </script>
 
 </body>
 </html>
-
