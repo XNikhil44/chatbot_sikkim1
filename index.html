@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sikkim Tourism Chatbot</title>
   <style>
+    /* Page Styling */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -59,27 +60,37 @@
       margin-top: 30px;
     }
 
-    /* Floating Chatbot Button */
-    .chatbot-btn {
+    /* Floating Buttons */
+    .btn {
       position: fixed;
-      bottom: 20px;
       right: 20px;
-      background: #25d366;
-      color: white;
       border: none;
       border-radius: 50%;
       width: 60px;
       height: 60px;
-      font-size: 30px;
+      font-size: 24px;
       cursor: pointer;
-      box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
-      transition: transform 0.2s;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
+      color: white;
       z-index: 1001;
     }
 
-    .chatbot-btn:hover {
-      transform: scale(1.1);
+    #chatBtn {
+      bottom: 20px;
+      background: #25d366; /* WhatsApp green */
+    }
+
+    #chatBtn:hover {
       background: #20b954;
+    }
+
+    #micBtn {
+      bottom: 90px;
+      background: #ff5722; /* Orange */
+    }
+
+    #micBtn:hover {
+      background: #e64a19;
     }
 
     /* Chatbot Container */
@@ -88,22 +99,30 @@
       position: fixed;
       bottom: 90px;
       right: 20px;
-      width: 350px;
+      width: 400px;
       height: 500px;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
-      z-index: 1000;
       background: white;
+      border-radius: 12px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
+      overflow: hidden;
+      z-index: 1000;
     }
 
-    iframe {
+    #chatbot-container iframe {
       width: 100%;
       height: 100%;
       border: none;
     }
 
     @media (max-width: 768px) {
+      main {
+        padding: 15px;
+      }
+
+      .tourism-img {
+        max-height: 250px;
+      }
+
       #chatbot-container {
         width: 90%;
         height: 70%;
@@ -114,11 +133,13 @@
 </head>
 <body>
 
+  <!-- Header -->
   <header>
     <h1>Welcome to Sikkim Tourism</h1>
     <p>Explore the beauty of the Himalayas with our smart chatbot guide</p>
   </header>
 
+  <!-- Navbar -->
   <nav>
     <a href="#">Home</a>
     <a href="#">Places</a>
@@ -126,6 +147,7 @@
     <a href="#">Contact</a>
   </nav>
 
+  <!-- Main Content -->
   <main>
     <h2>Discover Sikkim</h2>
     <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Tsomgo_Lake%2C_Sikkim.jpg" 
@@ -137,34 +159,54 @@
     </p>
   </main>
 
+  <!-- Footer -->
   <footer>
     <p>&copy; 2025 Sikkim Tourism | All Rights Reserved</p>
   </footer>
 
-  <!-- Floating Chatbot Button -->
-  <button class="chatbot-btn" onclick="toggleChat()">💬</button>
+  <!-- Floating Buttons -->
+  <button id="micBtn" class="btn">🎤</button>
+  <button id="chatBtn" class="btn">💬</button>
 
   <!-- Chatbot Container -->
   <div id="chatbot-container">
     <iframe id="chatbot-frame" 
-            src="https://www.chatbase.co/chatbot-iframe/WXJl80MOoH850gYH_yXdl"></iframe>
+      src="https://www.chatbase.co/chatbot-iframe/WXJl80MOoH850gYH_yXdl">
+    </iframe>
   </div>
 
   <script>
-    function toggleChat() {
-      const chatbot = document.getElementById('chatbot-container');
-      chatbot.style.display = chatbot.style.display === 'block' ? 'none' : 'block';
-    }
+    // Toggle chatbot
+    document.getElementById("chatBtn").onclick = function () {
+      const box = document.getElementById("chatbot-container");
+      box.style.display = (box.style.display === "block") ? "none" : "block";
+    };
 
-    // 🗣️ Make bot replies also speak
-    window.addEventListener("message", function(event) {
+    // Speech Recognition (mic input)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US"; // change to "hi-IN" for Hindi
+    recognition.interimResults = false;
+
+    document.getElementById("micBtn").onclick = () => recognition.start();
+
+    recognition.onresult = function (event) {
+      const userSpeech = event.results[0][0].transcript;
+      console.log("User said:", userSpeech);
+
+      // Send to chatbot iframe
+      const chatbotFrame = document.getElementById("chatbot-frame").contentWindow;
+      chatbotFrame.postMessage({ type: "user-message", message: userSpeech }, "*");
+    };
+
+    // Speech Synthesis (bot replies in voice)
+    window.addEventListener("message", function (event) {
       if (event.data && event.data.type === "bot-message") {
         const reply = event.data.message;
         console.log("Bot replied:", reply);
 
-        // Speak the reply
         const speech = new SpeechSynthesisUtterance(reply);
-        speech.lang = "en-US";  // change to "hi-IN" for Hindi
+        speech.lang = "en-US"; // change to "hi-IN" for Hindi
         window.speechSynthesis.speak(speech);
       }
     });
