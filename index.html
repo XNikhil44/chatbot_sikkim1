@@ -1,119 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sikkim Tourism Chatbot (Hugging Face)</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f7f7f7; }
-    .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; border: none; border-radius: 50%; width: 60px; height: 60px; font-size: 30px; cursor: pointer; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);}
-    #chatbot-container { display:none; position:fixed; bottom:90px; right:20px; width:350px; height:500px; background:white; border-radius:12px; box-shadow:0px 4px 12px rgba(0,0,0,0.4); display:flex; flex-direction:column; }
-    #chat-log { flex:1; padding:10px; overflow-y:auto; font-size:14px; text-align:left;}
-    #chat-input { display:flex; border-top:1px solid #ccc;}
-    #userInput { flex:1; padding:10px; border:none; outline:none;}
-    #sendBtn, #micBtn { padding:10px; border:none; cursor:pointer; background:#00695c; color:white;}
-    #micBtn { background:#d32f2f;}
-  </style>
+  <title>Chatbot Test</title>
 </head>
 <body>
+  <h1>Chatbot</h1>
+  <input type="text" id="userMsg" placeholder="Type your message" />
+  <button onclick="sendMessage()">Send</button>
+  <div id="response"></div>
 
-  <!-- Floating Button -->
-  <button class="chatbot-btn" onclick="toggleChat()">💬</button>
+  <script>
+    const HF_TOKEN = "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"; // yahan token daalo
 
-  <!-- Chatbot -->
-  <div id="chatbot-container">
-    <div id="chat-log"></div>
-    <div id="chat-input">
-      <input type="text" id="userInput" placeholder="Type a message...">
-      <button id="sendBtn">Send</button>
-      <button id="micBtn">🎤</button>
-    </div>
-  </div>
+    async function sendMessage() {
+      const msg = document.getElementById('userMsg').value;
+      const resDiv = document.getElementById('response');
 
-<script>
-  const chatContainer = document.getElementById("chatbot-container");
-  const chatLog = document.getElementById("chat-log");
-  const userInput = document.getElementById("userInput");
-  const sendBtn = document.getElementById("sendBtn");
-  const micBtn = document.getElementById("micBtn");
+      const r = await fetch("https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${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}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ inputs: msg, parameters: { max_new_tokens: 150 } })
+      });
 
-  function toggleChat() {
-    chatContainer.style.display = chatContainer.style.display === 'block' ? 'none' : 'block';
-  }
-
-  // Add message
-  function addMessage(sender, text) {
-    const p = document.createElement("p");
-    p.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chatLog.appendChild(p);
-    chatLog.scrollTop = chatLog.scrollHeight;
-  }
-
-  // Hugging Face API Call
-  async function getBotReply(message) {
-  const response = await fetch("https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill", {
-    method: "POST",
-    headers: { 
-      "Authorization": "Bearer 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", // apna HF token daalo
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      inputs: message,
-      parameters: { max_new_tokens: 150, temperature: 0.7 }
-    })
-  });
-
-  const data = await response.json();
-  if (data.error) {
-    return "⚠️ Error: " + data.error;
-  }
-  return data[0]?.generated_text || "Sorry, mujhe reply generate karne mein dikkat aayi.";
-}
-
-  // Send message
-  async function sendMessage(text) {
-    if (!text) return;
-    addMessage("You", text);
-    userInput.value = "";
-
-    const reply = await getBotReply(text);
-    addMessage("Bot", reply);
-
-    // Voice reply
-    const utterance = new SpeechSynthesisUtterance(reply);
-    speechSynthesis.speak(utterance);
-  }
-
-  sendBtn.onclick = () => sendMessage(userInput.value);
-
-  // --- Voice Input ---
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SpeechRecognition) {
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-
-    micBtn.onclick = () => {
-      recognition.start();
-      micBtn.textContent = "🎙️";
-    };
-
-    recognition.onresult = (event) => {
-      const voiceText = event.results[0][0].transcript;
-      micBtn.textContent = "🎤";
-      sendMessage(voiceText);
-    };
-
-    recognition.onend = () => {
-      micBtn.textContent = "🎤";
-    };
-  } else {
-    micBtn.style.display = "none";
-  }
-</script>
-
+      const data = await r.json();
+      resDiv.innerText = data?.[0]?.generated_text || JSON.stringify(data);
+    }
+  </script>
 </body>
 </html>
-
-
-
