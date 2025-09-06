@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sikkim Tourism Chatbot</title>
   <style>
-    /* General Styling */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -21,11 +20,6 @@
       text-align: center;
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 2.2em;
-    }
-
     nav {
       background: #004d40;
       text-align: center;
@@ -39,17 +33,9 @@
       font-weight: bold;
     }
 
-    nav a:hover {
-      text-decoration: underline;
-    }
-
     main {
       padding: 30px;
       text-align: center;
-    }
-
-    main h2 {
-      color: #00695c;
     }
 
     .tourism-img {
@@ -69,7 +55,60 @@
       margin-top: 30px;
     }
 
-    /* Floating Chatbot Button */
+    /* Chat Window */
+    #chatbot-container {
+      display: none;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 350px;
+      height: 500px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
+      z-index: 1000;
+      background: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chat-log {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    #chat-log p {
+      margin: 6px 0;
+    }
+
+    #chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+
+    #userInput {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+    }
+
+    #sendBtn, #micBtn {
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+      background: #00695c;
+      color: white;
+    }
+
+    #micBtn {
+      background: #d32f2f;
+    }
+
+    /* Floating Button */
     .chatbot-btn {
       position: fixed;
       bottom: 20px;
@@ -85,42 +124,12 @@
       box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.2s;
     }
-
     .chatbot-btn:hover {
       transform: scale(1.1);
       background: #20b954;
     }
 
-    /* Chatbot Container */
-    #chatbot-container {
-      display: none;
-      position: fixed;
-      bottom: 90px;
-      right: 20px;
-      width: 350px;
-      height: 500px;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
-      z-index: 1000;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    /* Responsive Design */
     @media (max-width: 768px) {
-      main {
-        padding: 15px;
-      }
-
-      .tourism-img {
-        max-height: 250px;
-      }
-
       #chatbot-container {
         width: 90%;
         height: 70%;
@@ -162,16 +171,111 @@
 
   <!-- Chatbot Container -->
   <div id="chatbot-container">
-    <iframe src="https://www.chatbase.co/chatbot-iframe/WXJl80MOoH850gYH_yXdl"></iframe>
+    <div id="chat-log"></div>
+    <div id="chat-input">
+      <input type="text" id="userInput" placeholder="Type a message...">
+      <button id="sendBtn">Send</button>
+      <button id="micBtn">🎤</button>
+    </div>
   </div>
 
   <script>
+    const chatContainer = document.getElementById("chatbot-container");
+    const chatLog = document.getElementById("chat-log");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const micBtn = document.getElementById("micBtn");
+
     function toggleChat() {
-      const chatbot = document.getElementById('chatbot-container');
-      chatbot.style.display = chatbot.style.display === 'block' ? 'none' : 'block';
+      chatContainer.style.display = chatContainer.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Knowledge base (Q&A)
+    const knowledgeBase = [
+      { q: "hello", a: "Hello! Welcome to Sikkim Tourism. How can I help you today?" },
+      { q: "hi", a: "Hi there! Ask me about places, culture, or travel tips in Sikkim." },
+      { q: "places to visit", a: "Some famous places are Tsomgo Lake, Nathula Pass, Yumthang Valley, and Pelling." },
+      { q: "culture", a: "Sikkim has a rich Buddhist culture, monasteries, festivals like Losar, and warm hospitality." },
+      { q: "food", a: "You should try momos, thukpa, gundruk soup, and traditional Sikkimese cuisine." },
+      { q: "best time to visit", a: "The best time to visit Sikkim is from March to June and September to December." },
+      { q: "capital", a: "The capital of Sikkim is Gangtok." },
+      { q: "bye", a: "Goodbye! Have a wonderful trip to Sikkim!" }
+    ];
+
+    // Add message to chat
+    function addMessage(sender, text) {
+      const p = document.createElement("p");
+      p.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      chatLog.appendChild(p);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    // Find best matching answer
+    function getBotResponse(message) {
+      const text = message.toLowerCase();
+      let bestMatch = null;
+      let bestScore = 0;
+
+      knowledgeBase.forEach(pair => {
+        const score = similarity(text, pair.q);
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = pair.a;
+        }
+      });
+
+      return bestScore > 0.4 ? bestMatch : "Sorry, I don’t have information about that. Try asking about places, culture, food, or best time to visit.";
+    }
+
+    // String similarity (simple Jaccard index on words)
+    function similarity(str1, str2) {
+      const s1 = new Set(str1.split(" "));
+      const s2 = new Set(str2.split(" "));
+      const intersection = new Set([...s1].filter(x => s2.has(x)));
+      const union = new Set([...s1, ...s2]);
+      return intersection.size / union.size;
+    }
+
+    // Send message
+    function sendMessage(text) {
+      if (!text) return;
+      addMessage("You", text);
+      userInput.value = "";
+
+      const reply = getBotResponse(text);
+      addMessage("Bot", reply);
+
+      const utterance = new SpeechSynthesisUtterance(reply);
+      speechSynthesis.speak(utterance);
+    }
+
+    sendBtn.onclick = () => sendMessage(userInput.value);
+
+    // Voice input
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+
+      micBtn.onclick = () => {
+        recognition.start();
+        micBtn.textContent = "🎙️";
+      };
+
+      recognition.onresult = (event) => {
+        const voiceText = event.results[0][0].transcript;
+        micBtn.textContent = "🎤";
+        sendMessage(voiceText);
+      };
+
+      recognition.onend = () => {
+        micBtn.textContent = "🎤";
+      };
+    } else {
+      micBtn.style.display = "none";
     }
   </script>
 
 </body>
 </html>
-
