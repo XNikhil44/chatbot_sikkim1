@@ -1,386 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sikkim Tourism Chatbot – Voice Q&A (No API)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sikkim Tourism Chatbot (Hugging Face)</title>
   <style>
-    :root{
-      --primary:#00695c;
-      --primary-dark:#004d40;
-      --accent:#25d366;
-      --bg1:#e0f7fa;
-      --bg2:#fff3e0;
-      --text:#333;
-    }
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:linear-gradient(to right,var(--bg1),var(--bg2));color:var(--text)}
-    header{background:var(--primary);color:#fff;padding:20px;text-align:center}
-    nav{background:var(--primary-dark);text-align:center;padding:10px}
-    nav a{color:#fff;text-decoration:none;margin:0 12px;font-weight:600}
-    nav a:hover{text-decoration:underline}
-    main{padding:24px;text-align:center}
-    .tourism-img{width:100%;max-height:380px;object-fit:cover;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.25)}
-    footer{background:var(--primary);color:#fff;text-align:center;padding:14px;margin-top:28px}
-
-    /* Floating Chat Button */
-    .chatbot-btn{position:fixed;bottom:20px;right:20px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:62px;height:62px;font-size:28px;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.35);display:grid;place-items:center}
-    .chatbot-btn:hover{filter:brightness(0.95)}
-
-    /* Chat Window */
-    #chat-window{display:none;position:fixed;bottom:92px;right:20px;width:360px;max-width:92vw;height:540px;max-height:80vh;background:#fff;border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.35);overflow:hidden;z-index:9999;display:flex;flex-direction:column}
-    .chat-header{background:var(--primary);color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px}
-    .chat-header h3{margin:0;font-size:16px;font-weight:700;line-height:1.2}
-    .chip{font-size:11px;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:999px}
-    .flex-1{flex:1}
-    .chat-body{padding:12px;background:#f7faf9;overflow:auto}
-    .msg{display:flex;margin:10px 0;gap:10px}
-    .msg .bubble{padding:10px 12px;border-radius:12px;max-width:80%;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-    .msg.user{justify-content:flex-end}
-    .msg.user .bubble{background:#dcf8c6}
-    .msg.bot .bubble{background:#fff}
-    .small{font-size:12px;opacity:.8}
-
-    .chat-input{display:flex;gap:8px;padding:10px;background:#fff;border-top:1px solid #eee}
-    .chat-input input{flex:1;padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px}
-    .chat-input button{border:none;border-radius:10px;padding:10px 12px;font-weight:600;cursor:pointer}
-    .send{background:var(--primary);color:#fff}
-    .mic{background:#f1f5f9}
-    .speak{background:#ffe8b6}
-
-    .hint{padding:8px 12px;background:#fff8e1;border-left:4px solid #ffb300;margin:10px;border-radius:6px}
-
-    @media (max-width:768px){
-      .tourism-img{max-height:240px}
-      #chat-window{right:4vw;width:92vw}
-    }
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f7f7f7; }
+    .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: #25d366; color: white; border: none; border-radius: 50%; width: 60px; height: 60px; font-size: 30px; cursor: pointer; box-shadow: 0px 4px 10px rgba(0,0,0,0.3);}
+    #chatbot-container { display:none; position:fixed; bottom:90px; right:20px; width:350px; height:500px; background:white; border-radius:12px; box-shadow:0px 4px 12px rgba(0,0,0,0.4); display:flex; flex-direction:column; }
+    #chat-log { flex:1; padding:10px; overflow-y:auto; font-size:14px; text-align:left;}
+    #chat-input { display:flex; border-top:1px solid #ccc;}
+    #userInput { flex:1; padding:10px; border:none; outline:none;}
+    #sendBtn, #micBtn { padding:10px; border:none; cursor:pointer; background:#00695c; color:white;}
+    #micBtn { background:#d32f2f;}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Welcome to Sikkim Tourism</h1>
-    <p>Explore the Himalayas with our voice-enabled guide</p>
-  </header>
-  <nav>
-    <a href="#">Home</a>
-    <a href="#">Places</a>
-    <a href="#">Culture</a>
-    <a href="#">Contact</a>
-  </nav>
-  <main>
-    <h2>Discover Sikkim</h2>
-    <img class="tourism-img" src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Tsomgo_Lake%2C_Sikkim.jpg" alt="Sikkim Tsomgo Lake"/>
-    <p>Sikkim is a small but breathtakingly beautiful state in India, known for its mountains, monasteries, and rich biodiversity. Use the floating chat to ask about places, permits, best time to visit, festivals, treks, wildlife, and more — now with <b>voice input</b> and <b>voice replies</b>.</p>
-    <div class="hint">Tip: Click the 💬 button to open chat. Click 🎤 to speak your question. Click 🔊 to hear the reply.</div>
-  </main>
-  <footer>
-    <p>© 2025 Sikkim Tourism | Voice Q&A Bot (No API)</p>
-  </footer>
 
-  <!-- Floating chat button -->
-  <button class="chatbot-btn" id="openBtn" title="Open Chat">💬</button>
+  <!-- Floating Button -->
+  <button class="chatbot-btn" onclick="toggleChat()">💬</button>
 
-  <!-- Chat window -->
-  <section id="chat-window" aria-live="polite">
-    <div class="chat-header">
-      <div>🗻</div>
-      <div class="flex-1">
-        <h3>Sikkim Tourism Guide</h3>
-        <div class="small">Offline Q&A · Voice input & reply</div>
-      </div>
-      <span class="chip" id="sttStatus">STT: auto</span>
-      <span class="chip" id="ttsStatus">TTS: on</span>
-      <button id="closeBtn" title="Close" style="margin-left:8px;background:#fff;color:#000;border:none;border-radius:8px;padding:6px 9px;cursor:pointer">✖</button>
+  <!-- Chatbot -->
+  <div id="chatbot-container">
+    <div id="chat-log"></div>
+    <div id="chat-input">
+      <input type="text" id="userInput" placeholder="Type a message...">
+      <button id="sendBtn">Send</button>
+      <button id="micBtn">🎤</button>
     </div>
-    <div id="chat" class="chat-body"></div>
-    <div class="chat-input">
-      <input id="userInput" placeholder="Ask about permits, places, seasons, festivals…"/>
-      <button class="mic" id="micBtn" title="Speak (hold or click)">🎤</button>
-      <button class="speak" id="speakBtn" title="Hear last answer">🔊</button>
-      <button class="send" id="sendBtn">Send</button>
-    </div>
-  </section>
+  </div>
 
-  <script>
-    /* ------------------ BASIC UI ------------------ */
-    const openBtn = document.getElementById('openBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    const chatWin = document.getElementById('chat-window');
-    const chatEl = document.getElementById('chat');
-    const inputEl = document.getElementById('userInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const micBtn = document.getElementById('micBtn');
-    const speakBtn = document.getElementById('speakBtn');
-    const sttStatus = document.getElementById('sttStatus');
-    const ttsStatus = document.getElementById('ttsStatus');
+<script>
+  const chatContainer = document.getElementById("chatbot-container");
+  const chatLog = document.getElementById("chat-log");
+  const userInput = document.getElementById("userInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const micBtn = document.getElementById("micBtn");
 
-    openBtn.onclick = () => { chatWin.style.display = 'flex'; inputEl.focus(); greet(); };
-    closeBtn.onclick = () => { chatWin.style.display = 'none'; };
+  function toggleChat() {
+    chatContainer.style.display = chatContainer.style.display === 'block' ? 'none' : 'block';
+  }
 
-    function addMsg(role, text){
-      const row = document.createElement('div');
-      row.className = 'msg ' + (role==='user'?'user':'bot');
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.textContent = text;
-      row.appendChild(bubble);
-      chatEl.appendChild(row);
-      chatEl.scrollTop = chatEl.scrollHeight;
-      if(role==='bot') lastBotReply = text;
+  // Add message
+  function addMessage(sender, text) {
+    const p = document.createElement("p");
+    p.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chatLog.appendChild(p);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  // Hugging Face API Call
+  async function getBotReply(message) {
+    const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
+      method: "POST",
+      headers: { 
+        "Authorization": "Bearer YOUR_HF_API_KEY", // paste token here
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ inputs: message })
+    });
+    const data = await response.json();
+    if (data.error) {
+      return "⚠️ Error: " + data.error;
     }
+    return data[0]?.generated_text || "Sorry, I couldn’t generate a reply.";
+  }
 
-    function greet(){
-      if(window.__greeted) return; window.__greeted=true;
-      addMsg('bot', 'Namaste! Ask me anything about Sikkim — places, permits (e.g., Tsomgo/Nathu La), best time to visit, treks like Dzongri, monasteries like Rumtek & Pemayangtse, wildlife, festivals, and more. Try: “Best time to visit Gangtok?” or “Do foreigners need a permit for Tsomgo Lake?”');
-    }
+  // Send message
+  async function sendMessage(text) {
+    if (!text) return;
+    addMessage("You", text);
+    userInput.value = "";
 
-    /* -------------- KNOWLEDGE BASE (100+ Q&A) -------------- */
-    const knowledgeBase = [
-      // --- Essentials / Climate / Best time ---
-      {q:"What is the capital of Sikkim?", a:"Gangtok is the capital and main urban hub of Sikkim, set along a ridge with views of Khangchendzonga.", tags:["essentials","gangtok"]},
-      {q:"Where is Gangtok located?", a:"Gangtok lies on a ridge above the Ranipool (Ranipul) River with an average altitude ~1,676 m (5,500 ft).", tags:["gangtok"]},
-      {q:"Gangtok weather summer and winter?", a:"Summer afternoons can reach ~25°C and rainy evenings ~13°C. Winters see highs ~18°C and lows near 5°C. Pack light woollens/rainwear for summer and warmer layers for winter.", tags:["climate","gangtok"]},
-      {q:"How much rainfall does Gangtok get?", a:"Gangtok receives over ~150 inches annually, mostly during the summer monsoon.", tags:["climate","gangtok"]},
-      {q:"Best time to visit Sikkim?", a:"Clear views and pleasant weather typically occur March–June and September–December. Monsoon (approx June–Sept) brings heavy rain; high passes may close in peak winter.", tags:["best time"]},
+    const reply = await getBotReply(text);
+    addMessage("Bot", reply);
 
-      // --- Permits / Access (from PDFs) ---
-      {q:"Is Nathu La open for tourists?", a:"Nathu La (≈14,450 ft) is open to Indian nationals Wednesday–Sunday with a permit obtained via a registered travel agency. Foreign nationals are not allowed to visit Nathu La.", tags:["permits","east","nathula"]},
-      {q:"Do I need a permit for Tsomgo (Changu) Lake?", a:"Both Indian and foreign tourists can visit Tsomgo (≈12,400 ft). Foreign visitors must be in a group of two or more and apply for a visitors permit through a registered travel agency.", tags:["permits","east","tsomgo"]},
-      {q:"Where is Baba Harbhajan Singh Temple?", a:"On the road beyond Tsomgo/Nathula side. There is an Old Baba Mandir near Chhokya Chho (~4,000 m) and a more-visited reconstructed shrine at the Kupup–Gnathang junction.", tags:["east","temple"]},
+    // Voice reply
+    const utterance = new SpeechSynthesisUtterance(reply);
+    speechSynthesis.speak(utterance);
+  }
 
-      // --- East Sikkim – Gangtok city sights ---
-      {q:"What is Tsuklakhang?", a:"The royal chapel inside the palace complex on the Ridge; public access on major festival days such as Pang Lhabsol and Kagye Thutor.", tags:["gangtok","heritage"]},
-      {q:"Namgyal Institute of Tibetology highlights?", a:"Founded 1958–59, it houses a museum of Buddhist artifacts and one of the world’s largest collections of Mahayana Buddhist books and manuscripts.", tags:["gangtok","tibetology"]},
-      {q:"What are Do Drul & Jhang Chub Chorten?", a:"Two important stupas near Tibetology: Do Drul (victory of good over evil) and Jhang Chub (in memory of Trulshig Rinpoche).", tags:["gangtok","stupa"]},
-      {q:"Enchey Monastery", a:"A Nyingma monastery above Gangtok, built on the hermitage site of Lama Drutob Karpo; offers panoramic views.", tags:["gangtok","monastery"]},
-      {q:"Himalayan Zoological Park (Bulbulay)", a:"Immersion-exhibit style park with red panda, Himalayan black bear, snow leopard, blue sheep and more; also great mountain views.", tags:["gangtok","wildlife"]},
-      {q:"Flower Show Complex", a:"Seasonal displays of Sikkim’s famed orchids, seasonal flowers and bonsai; competitions during tourist seasons.", tags:["gangtok","orchids"]},
-      {q:"Directorate of Handicrafts & Handloom", a:"Established 1957, showcases and sells traditional crafts (carved wood, bamboo work, carpets, textiles). Watch artisans at work.", tags:["gangtok","crafts"]},
-      {q:"Gangtok Ropeway", a:"Cable car ride from Deorali to the Secretariat (via Hur Huray Dam), giving aerial views of Gangtok and surrounding hills.", tags:["gangtok","ropeway"]},
-      {q:"Tashi View Point / Bakthang / Ganesh Tok / Hanuman Tok", a:"Popular viewpoints and temples around Gangtok offering sunrise vistas and skyline views on clear days.", tags:["gangtok","viewpoints"]},
-      {q:"Fambong Lho Wildlife Sanctuary", a:"~30 km from Gangtok; ~51 sq km sanctuary connecting toward Khangchendzonga NP, with rich mammal and birdlife.", tags:["east","wildlife"]},
-      {q:"Sa-Ngor Chotshog Centre (Sakya)", a:"Only Sakya-order monastery in Sikkim (est. 1961) on a hilltop ~5–11 km from Gangtok.", tags:["east","monastery"]},
-      {q:"Lingdum (Zurmang) Monastery", a:"Pal Zurmang Kagyu at Lingdum on Rumtek–Ranka–Gangtok road; striking multi-level monastic architecture.", tags:["east","monastery"]},
-      {q:"Rumtek Monastery (Dharma Chakra Centre)", a:"Major Kagyu monastery complex near Gangtok; noted for cham dances and spiritual significance.", tags:["east","monastery","rumtek"]},
+  sendBtn.onclick = () => sendMessage(userInput.value);
 
-      // --- East day trips ---
-      {q:"Tsomgo (Changu) Lake experience?", a:"Glacial lake fed by melting snows; frozen in winter, ringed by blooms in late spring. Yak/mule rides and stalls available; snow boots can be hired.", tags:["east","tsomgo"]},
-      {q:"Nathu La details", a:"One of the highest motorable roads; on clear days you can see the road into Chumbi Valley. Tourists can go close to the border fence.", tags:["east","nathula"]},
-      {q:"Pastanga village", a:"Cultural village under an hour from Gangtok; traditional Bhutia & Rai houses, cardamom plantations, sacred waterfall, orchids, folk hospitality.", tags:["east","village"]},
-      {q:"Aritar / Ghati Tso", a:"~63 km from Gangtok at ~1,400 m; emerald forests, boating, birdwatching, and views of Khangchendzonga. Peaceful stays available.", tags:["east","aritar"]},
+  // --- Voice Input ---
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
 
-      // --- West Sikkim (Gyalshing/Pelling/Yuksom circuit) ---
-      {q:"What is Gyalshing (Geyzing)?", a:"District HQ of West Sikkim; provisioning point before exploring Pelling, Pemayangtse, Rabdentse and beyond.", tags:["west","gyalshing"]},
-      {q:"Pelling overview", a:"Hill town ~6,800 ft on a ridge between old monasteries; base for skywalk, Pemayangtse, Rabdentse, waterfalls and Khecheopalri Lake.", tags:["west","pelling"]},
-      {q:"Pelling Skywalk & Chenrezig", a:"India’s first glass-bottom skywalk with a 137-ft statue of Chenrezig and views toward the Khangchendzonga range.", tags:["west","pelling","skywalk"]},
-      {q:"Pemayangtse Monastery highlights", a:"Late-17th century Nyingma monastery; home to 108 monks. Don’t miss the exquisite wooden Zangdok Palri model (built 1971) on the top floor.", tags:["west","monastery","pemayangtse"]},
-      {q:"Sangachoeling Monastery", a:"Second-oldest monastery, ~2 km above Pelling; traditional interiors and sweeping views after a short uphill walk.", tags:["west","monastery"]},
-      {q:"Rabdentse Ruins", a:"Archaeologically restored ruins of Sikkim’s second capital; short forest walk leads to the fort site and chortens with panoramic views.", tags:["west","heritage"]},
-      {q:"Khecheopalri (Khechuperi) Lake", a:"Sacred, wish-fulfilling lake in a forested valley with prayer flags; small monastery ~1.5 km further.", tags:["west","lake"]},
-      {q:"Shingshore Suspension Bridge", a:"~680 ft long and one of Asia’s highest suspension bridges; near medicinal hot springs and a sacred cave.", tags:["west","bridge"]},
-      {q:"Yuksom significance", a:"First capital of Sikkim & coronation site of the first Chogyal at Norbugang (a declared Heritage Site); also base for the Dzongri–Goecha La trek.", tags:["west","yuksom","heritage"]},
-      {q:"Dubdi Monastery (near Yuksom)", a:"Earliest monastery established after the first Chogyal’s enthronement; ideal meditative setting in verdant forests.", tags:["west","monastery","yuksom"]},
-      {q:"Dzongri & Goecha La trek", a:"Popular multi-day trek from Yuksom through rhododendron and silver fir, seasonal yak herder camps, Samiti Lake, Thangsing meadows, with grand views of Khangchendzonga & Pandim.", tags:["west","trek"]},
-      {q:"Barsey Rhododendron Sanctuary", a:"Sanctuary famed for rhododendrons and medicinal herbs; approached via Rinchenpong/Uttarey side for floral spring displays.", tags:["west","sanctuary"]},
-      {q:"Tashiding Monastery & Bumchu", a:"Sacred hilltop monastery; the Bumchu festival opens a centuries-old holy water vase whose level is read as an omen for the year.", tags:["west","festival","monastery"]},
-
-      // --- South Sikkim (Namchi/Ravangla/Temi) ---
-      {q:"Namchi overview", a:"Headquarters of South Sikkim; base for Samdruptse, Ngadak, and nearby gardens and biodiversity parks.", tags:["south","namchi"]},
-      {q:"Samdruptse statue", a:"Near Namchi, a 135-ft statue of Guru Padmasambhava on Samdruptse hill; among the tallest of its kind.", tags:["south","namchi"]},
-      {q:"Namchi Rock Garden", a:"Above Ngadak Monastery: themed garden with rare flowers/orchids and a hilltop children’s playground.", tags:["south","garden"]},
-      {q:"State Biodiversity Park & Medicinal Plants Garden", a:"~14 km north of Namchi — conservation units for sub-tropical & temperate flora with an education and recreation center.", tags:["south","biodiversity"]},
-      {q:"Ravangla (Rabong)", a:"~6,800 ft town between Maenam & Tendong; hosts Pang Lhabsol (Warrior Dance) at Mani Chokarling; Tibetan Refugee Settlement’s Kunpheling carpets nearby.", tags:["south","ravangla"]},
-      {q:"Temi Tea Garden", a:"Famous tea estate in South Sikkim with scenic slopes and viewpoints.", tags:["south","temi","tea"]},
-
-      // --- North Sikkim (Lachen/Lachung/Yumthang) ---
-      {q:"About North Sikkim", a:"Largest area but least populated; traditional Bhutia & Lepcha communities with Dzumsa village councils in Lachen & Lachung.", tags:["north","culture"]},
-      {q:"Chungthang", a:"Junction town at confluence of Lachen & Lachung rivers; stock up before heading deeper north.", tags:["north"]},
-      {q:"Lachung", a:"Valley town ~2,624 m with waterfalls and alpine scenery; gateway to Yumthang (Valley of Flowers) and Yumesamdong.", tags:["north","lachung"]},
-      {q:"Yumthang Valley", a:"~3,597 m meadow famed for rhododendrons and alpine blooms in spring; also known for hot springs with reputed medicinal properties.", tags:["north","yumthang"]},
-      {q:"Yumesamdong (Zero Point)", a:"~4,663 m army outpost near the border where the road ends; sweeping high-mountain vistas with azaleas in season.", tags:["north"]},
-      {q:"Lachen", a:"Alpine town ~2,895 m used seasonally; residents often move with yak herds to higher pastures in summer.", tags:["north","lachen"]},
-      {q:"High lakes in North Sikkim", a:"The region hosts many high-altitude lakes, including Cho Lhamu (~5,181 m) and others near Teesta’s source; several lie on restricted high plateaus.", tags:["north","lakes"]},
-
-      // --- Nature & Wildlife ---
-      {q:"How rich is Sikkim’s biodiversity?", a:"Around 523 orchid varieties, 600+ butterfly species, and ~500 bird species occur here; flagship fauna include red panda and snow leopard. Khangchendzonga National Park covers ~850 sq km.", tags:["wildlife","orchids","birds"]},
-
-      // --- Festivals & Culture ---
-      {q:"Pang Lhabsol festival", a:"State festival honoring Sikkim’s guardian deity; marked in various monasteries (e.g., performances at Ravangla’s Mani Chokarling, and royal chapel access in Gangtok).", tags:["festival","culture"]},
-      {q:"Bumchu festival", a:"At Tashiding Monastery: the sacred water vase is opened and read; a small portion is distributed to devotees.", tags:["festival","west"]},
-
-      // --- Handy mini-FAQs (shorts) ---
-      {q:"Is Gangtok a good base to explore?", a:"Yes — tourism agencies, hotels, transport, ropeway, and multiple day-trips make it an ideal staging point.", tags:["gangtok"]},
-      {q:"Which monasteries near Pelling are must-see?", a:"Pemayangtse and Sangachoeling — among the oldest, with art, relics, and commanding views.", tags:["west","monastery","pelling"]},
-      {q:"Any glass skywalk in Sikkim?", a:"Yes, Pelling Skywalk near the Chenrezig statue offers India’s first glass-bottom walkway.", tags:["west","attraction"]},
-      {q:"Where to see orchids?", a:"Flower Exhibition Centre in Gangtok, plus seasonal wild blooms near Tsomgo and across sanctuaries.", tags:["orchids"]},
-      {q:"Are yak rides available?", a:"Yes, at Tsomgo Lake you’ll find colorfully decorated yak and mule rides seasonally.", tags:["east","activity"]},
-      {q:"What’s special at Khecheopalri Lake?", a:"It’s revered by Buddhists and Hindus; believed to be wish-fulfilling.", tags:["west","lake"]},
-      {q:"Is there a royal heritage site?", a:"Yes — Norbugang at Yuksom (coronation site) and the palace chapel Tsuklakhang in Gangtok on certain festivals.", tags:["heritage"]},
-      {q:"Where can I learn about Tibetan culture?", a:"Namgyal Institute of Tibetology museum and library in Gangtok.", tags:["culture","gangtok"]},
-      {q:"Best trek for first-timers?", a:"Dzongri route from Yuksom is popular; offers forests, meadows, and big-mountain views.", tags:["trek"]},
-
-      // --- Add many granular Q&As to surpass 100 entries ---
-      {q:"What does ‘Gangtok’ mean?", a:"It means ‘hilltop’ (Bhutia language).", tags:["gangtok","name"]},
-      {q:"Where is the Ridge in Gangtok?", a:"Between White Hall and the former royal palace — vibrant during cherry blossom season with a Sikkimese gazebo.", tags:["gangtok","walk"]},
-      {q:"Tsuklakhang public access?", a:"Generally on major religious festival days such as Pang Lhabsol and Kagye Thutor.", tags:["gangtok","festival"]},
-      {q:"What can I see inside Tibetology museum?", a:"Buddhist artifacts, thangka paintings, ritual objects, and texts; rotating photo exhibits upstairs.", tags:["gangtok","museum"]},
-      {q:"Any memorial for a Chogyal?", a:"Palden Thondup Namgyal Memorial Park beside Tibetology has a life-size bronze statue.", tags:["gangtok","heritage"]},
-      {q:"Do Drul Chorten significance?", a:"Commemorates the victory of good over evil; often visited with nearby Jhang Chub Chorten.", tags:["gangtok","stupa"]},
-      {q:"Good viewpoints near Gangtok?", a:"Tashi View Point, Ganesh Tok, Hanuman Tok; clear mornings offer best horizons.", tags:["viewpoints"]},
-      {q:"Any amusement park?", a:"Kanchenzonga Amusement Park appears in local circuits as a leisure stop.", tags:["leisure"]},
-      {q:"Pastanga culture highlights?", a:"Traditional houses unchanged ~150 years, folk hospitality, forest orchids, cardamom trails.", tags:["culture","village"]},
-      {q:"Aritar activities?", a:"Boating on Ghati Tso, birding, trekking, and scenic drives along terrace farms and waterfalls.", tags:["east","aritar","activity"]},
-      {q:"Is Zuluk on Silk Route?", a:"Yes — the Gangtok–Silk Route circuit lists Zuluk, Thambi viewpoint, Gnathang Valley in extended day circuits.", tags:["east","silk route"]},
-      {q:"Kyangnosla Alpine Sanctuary?", a:"Part of nature circuit from Gangtok toward Tsomgo; alpine flora and viewpoints.", tags:["east","sanctuary"]},
-      {q:"Seven Sisters / Ban Jhakri Falls?", a:"Noted waterfalls on leisure circuits around Gangtok.", tags:["east","waterfalls"]},
-      {q:"Rabdentse what remains?", a:"Archaeological ruins of palace complex with visible rooms and chortens; offers sweeping valley views.", tags:["west","heritage"]},
-      {q:"Sangachoeling access?", a:"Currently via a short uphill footpath (road under works in older notes). Views and tea at a small guest house near the top.", tags:["west","monastery"]},
-      {q:"Shingshore nearby spots?", a:"Khandu Sangphu hot springs and a sacred cave are close to the bridge area.", tags:["west","bridge","hotspring"]},
-      {q:"Khecheopalri beliefs?", a:"Its clear waters are regarded as wish-fulfilling; prayer flags and forests encircle the lake.", tags:["west","lake","belief"]},
-      {q:"Yuksom local support?", a:"Families offer lodging, pack animals, guides/porters; local potatoes are a noted produce for trekkers.", tags:["west","yuksom","services"]},
-      {q:"Dzongri route flora?", a:"Rhododendrons and silver fir forests (notably between Tshoka and Dzongri) with rich birdlife in Onglathang Valley.", tags:["west","trek","flora"]},
-      {q:"Thangsing & Samiti Lake?", a:"Thangsing meadow sits in a broad valley near glacial Samiti Lake — classic camps en route to Goecha La.", tags:["west","trek","lakes"]},
-      {q:"Views from Zemathang?", a:"Upper campsite (~4,572 m) with views of Goecha Peak and Mount Pandim’s glaciers and icefalls.", tags:["west","trek","views"]},
-      {q:"Rinchenpong as a base?", a:"Gateway for Barsey Rhododendron Sanctuary and Singalila range walks; famed Kanchenjunga vistas.", tags:["west","rinchenpong"]},
-      {q:"Namchi monasteries?", a:"Ngadak Monastery and Abhay (Ablay) community monastery are in the vicinity.", tags:["south","monastery"]},
-      {q:"Tibetan Refugee Settlement (Ravangla)", a:"Above the town — Kunpheling Carpet Center sells Tibetan-style wool carpets.", tags:["south","shopping"]},
-      {q:"Any unique councils in the North?", a:"Dzumsa village councils (led by the Pipon) in Lachen and Lachung oversee local governance and seasonal movements.", tags:["north","culture"]},
-      {q:"What wildlife may be seen in North?", a:"Blue sheep (bharal) and the elusive snow leopard inhabit high valleys if you’re patient and lucky.", tags:["north","wildlife"]},
-      {q:"Yumthang season?", a:"Spring (Apr–May) for rhododendrons; winters can see snow; roads depend on weather.", tags:["north","season"]},
-      {q:"Zero Point altitude?", a:"Yumesamdong sits near ~15,300 ft (4,663 m).", tags:["north","altitude"]},
-      {q:"Any caution for Nathu La?", a:"High altitude; visitors with heart or severe altitude concerns should avoid. Weather often deteriorates by afternoon — start early.", tags:["east","nathula","safety"]},
-      {q:"Baba Mandir story?", a:"Built in memory of Sepoy Harbhajan Singh; associated with legends of guidance after his martyrdom.", tags:["east","legend"]},
-      {q:"Where to find butterflies/birds?", a:"Across sanctuaries and alpine meadows; overall Sikkim lists 600+ butterflies and ~500 bird species.", tags:["wildlife","butterflies","birds"]},
-      {q:"Any national park?", a:"Khangchendzonga National Park is Sikkim’s centerpiece (~850 sq km), core of treks and biodiversity.", tags:["parks"]},
-      {q:"Prayer flag etiquette?", a:"Do not touch or remove flags; they are sacred offerings. Walk clockwise around chortens and gompas.", tags:["culture","etiquette"]},
-      {q:"What is Pang Lhabsol’s warrior dance?", a:"A dramatic masked dance venerating Sikkim’s guardian deity; performed at venues like Ravangla.", tags:["festival","dance"]},
-      {q:"What is the Norbugang Coronation Throne?", a:"Stone throne complex at Yuksom marking the enthronement of Sikkim’s first Chogyal; a declared Heritage Site.", tags:["west","heritage"]},
-      {q:"Can foreign tourists visit Tsomgo?", a:"Yes, in groups of ≥2 with permits via registered agencies.", tags:["permits","tsomgo"]},
-      {q:"Can foreign tourists visit Nathu La?", a:"No, access is restricted to Indian nationals (with permits).", tags:["permits","nathula"]},
-      {q:"How far is Tsomgo from Gangtok?", a:"Approximately 38 km by a winding high-mountain road.", tags:["east","distance"]},
-      {q:"What does Khecheopalri mean to locals?", a:"A revered site where even leaves are said to avoid settling on the lake’s clear surface — a symbol of purity (local belief).", tags:["west","belief"]},
-      {q:"Are there hot springs in West?", a:"Yes, medicinal hot springs occur near Shingshore bridge area and along trekking valleys.", tags:["west","hotspring"]},
-      {q:"What is the glass skywalk USP?", a:"Perspective over Pelling skyline with mountain range views, adjacent to Chenrezig statue complex.", tags:["west","skywalk"]},
-      {q:"Where are Kanchenjunga views best?", a:"Clear mornings from Pelling, Tashi View Point, and ridgelines across West & North on non-monsoon days.", tags:["views"]},
-      {q:"Is Gangtok good for shopping crafts?", a:"Yes — Directorate of Handicrafts & Handloom plus local markets for carpets, woodwork, and textiles.", tags:["shopping","crafts"]},
-      {q:"What to wear in spring?", a:"Layer up: cool mornings/evenings, sunny afternoons; a light rain jacket helps.", tags:["packing"]},
-      {q:"Monsoon travel tip?", a:"Expect heavy showers and possible road delays/landslides; build buffer time and check status.", tags:["safety","monsoon"]},
-      {q:"Winter travel tip?", a:"High passes (like Nathu La) may close during heavy snowfall; carry warm layers and confirm road conditions.", tags:["winter","safety"]},
-      {q:"Is Ravangla good for carpets?", a:"Yes, Kunpheling Carpet Center in the Tibetan Settlement sells handwoven carpets.", tags:["south","shopping"]},
-      {q:"Any lakes in extreme North?", a:"Cho Lhamu (~5,181 m) and other remote lakes lie near Teesta’s source in restricted high plateaus.", tags:["north","lakes"]},
-      {q:"Traditional governance in North?", a:"Dzumsa councils handle local law/order, grazing, cultivation, and seasonal mobility.", tags:["north","culture"]},
-      {q:"Any birdwatching hotspots on treks?", a:"Onglathang Valley on the Dzongri–Goecha route hosts a quarter of Indian subcontinent’s bird species records noted by trekkers.", tags:["birds","trek"]},
-      {q:"Is there a children’s park near Namchi?", a:"The hilltop Rock Garden includes one of the highest-sited children’s playgrounds.", tags:["south","family"]},
-      {q:"Where are alpine flowers near roads?", a:"Nathu La approach and Yumthang meadows feature primulas, rhododendrons and seasonal blossoms.", tags:["flora"]},
-      {q:"Museum hours & fees?", a:"Timings/fees change — check locally (the bot provides content, not live rates).", tags:["planning"]},
-      {q:"Do I need a guide for treks?", a:"Strongly recommended for safety and permits/logistics, especially on multi-day routes like Dzongri–Goecha.", tags:["trek","safety"]},
-      {q:"Is drone photography allowed?", a:"Drone use is regulated/restricted near borders, monasteries, and wildlife zones. Obtain local permissions before flying.", tags:["rules","photography"]},
-      {q:"Respect at monasteries?", a:"Dress modestly, remove hats, ask before photographing monks or rituals, and move clockwise inside.", tags:["etiquette","monastery"]},
-      {q:"ATM at high altitude?", a:"A notable ATM is located near the Nathu La zone, cited among the highest.", tags:["east","nathula"]},
-      {q:"Are yak herders common?", a:"Seasonal yak herding settlements appear along higher trekking routes and in Lachen/Lachung region.", tags:["culture","yak"]},
-      {q:"Do I need boots for snow?", a:"You can rent gumboots/snow boots near Tsomgo during snowy months.", tags:["gear","tsomgo"]},
-      {q:"Is Pastanga ideal for eco-visits?", a:"Yes — orchids on treetops, forest streams, and traditional village life with homely hospitality.", tags:["eco","village"]},
-      {q:"Is Aritar good for a night stay?", a:"Yes — options include a trekker’s hut, small lodges, and a private resort in a tranquil setting.", tags:["east","stay"]},
-      {q:"Which festival opens the royal chapel?", a:"Pang Lhabsol often aligns with access to the Tsuklakhang (check local schedule).", tags:["festival","gangtok"]},
-      {q:"Any mask dances I can see?", a:"Annual cham (mask) dances occur at multiple monasteries, including Pemayangtse and Rumtek during specific festivals.", tags:["festival","dance"]},
-      {q:"What’s special about Pemayangtse’s top floor?", a:"The intricate Zangdok Palri wooden model — a highlight of Sikkim’s sacred art.", tags:["art","monastery"]},
-      {q:"Are there ruins of first capital?", a:"Yuksom holds Norbugang (coronation site); Rabdentse remains the second capital’s ruins near Pelling.", tags:["heritage"]},
-      {q:"Is Temi Tea accessible to visitors?", a:"Yes — scenic estate roads and viewpoints attract tea & photo enthusiasts.", tags:["tea","south"]},
-      {q:"Are there sacred caves?", a:"Caves occur in multiple districts (e.g., near Shingshore bridge area); ask local guides for access and safety.", tags:["sacred","caves"]},
-      {q:"Where to see red pandas?", a:"Himalayan Zoological Park in Gangtok uses open enclosures; sightings also possible in wild sanctuaries with expert guides.", tags:["wildlife","red panda"]},
-      {q:"Can I cover Pelling in one day?", a:"You can see highlights (Skywalk, Pemayangtse, Rabdentse, waterfalls, Khecheopalri) with an early start, but staying overnight is more relaxed.", tags:["itinerary","pelling"]},
-      {q:"How long to reach Tsomgo from Gangtok?", a:"Road distance ~38 km; actual time depends on weather and road checks.", tags:["east","time"]},
-      {q:"Which sanctuary connects to KNP?", a:"Fambong Lho Wildlife Sanctuary in East connects toward Khangchendzonga NP in North.", tags:["wildlife","parks"]},
-      {q:"What is Zero Point like?", a:"A stark, windswept terminus near the border with wide alpine vistas; roads and access are weather-dependent.", tags:["north","vista"]},
-      {q:"Are permits needed for all border areas?", a:"Yes — sensitive border zones require regulated permits and often guides/escorts via registered agencies.", tags:["permits","border"]},
-      {q:"What are typical town altitudes?", a:"Gangtok ~1,676 m; Pelling ~2,072 m; Yuksom ~1,700 m; Lachung ~2,624 m. High passes/lakes exceed 4,000 m.", tags:["altitudes"]},
-      {q:"Is there an institute for Tibetan studies?", a:"Namgyal Institute of Tibetology — premier centre for Tibetology in India.", tags:["culture","education"]},
-      {q:"Are there eco-circuits from Gangtok?", a:"Planned circuits include nature/leisure routes via sanctuaries, Tsomgo–Nathula, and village stops like Pastanga.", tags:["circuits"]},
-      {q:"Any rules at lakes?", a:"Avoid littering, don’t feed wildlife, respect sacred status (Khecheopalri, Tsomgo).", tags:["rules","lakes"]},
-      {q:"Photography at monasteries?", a:"Often allowed outside; ask before shooting inside or during rituals.", tags:["etiquette","photo"]},
-      {q:"Is there an orchid season?", a:"Spring and early summer see peak blooms; exhibitions run seasonally at the Flower Show complex.", tags:["orchids","season"]},
-      {q:"Which waterfall near Pelling is famous?", a:"Kanchenjunga Waterfalls — among the largest in Sikkim; Rimbi is another scenic fall nearby.", tags:["west","waterfalls"]}
-    ];
-
-    // Ensure we exceed 100
-    console.log('KB entries:', knowledgeBase.length);
-
-    /* -------------- SEARCH & MATCHING -------------- */
-    function normalize(str){
-      return (str||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
-    }
-
-    function score(q, kb){
-      const nq = normalize(q);
-      const nQ = normalize(kb.q);
-      let s = 0;
-      // term overlap
-      const terms = new Set(nq.split(' '));
-      for(const t of terms){ if(nQ.includes(t)) s += 2; if((kb.tags||[]).join(' ').includes(t)) s += 1; }
-      // exact-ish match boost
-      if(nQ===nq) s += 6;
-      if(nQ.startsWith(nq) || nq.startsWith(nQ)) s += 3;
-      // important keywords
-      for(const k of ['permit','nathula','tsomgo','yuksom','pelling','gangtok','festival','monastery','trek','lake','wildlife']){
-        if(nq.includes(k) && (nQ.includes(k) || (kb.tags||[]).includes(k))) s += 1.5;
-      }
-      return s;
-    }
-
-    function replyFor(userQ){
-      if(!userQ || !userQ.trim()) return null;
-      const scored = knowledgeBase.map(k=>({k, s:score(userQ,k)})).sort((a,b)=>b.s-a.s);
-      const top = scored[0];
-      if(!top || top.s<2){
-        return "I don't have an exact answer in my offline guide. Try asking about: permits (Tsomgo/Nathu La), Pelling skywalk, Pemayangtse, Yuksom trek, Yumthang, Rumtek, orchids, festivals, or best time to visit.";
-      }
-      return top.k.a;
-    }
-
-    /* ------------------ TTS (Voice Reply) ------------------ */
-    let lastBotReply = '';
-    function speak(text){
-      if(!('speechSynthesis' in window)) { ttsStatus.textContent = 'TTS: off'; return; }
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = 1; u.pitch = 1; u.lang = 'en-IN';
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
-      ttsStatus.textContent = 'TTS: on';
-    }
-
-    /* ------------------ STT (Voice Input) ------------------ */
-    let rec=null; let recognizing=false; let sttSupported=false;
-    function initSTT(){
-      const R = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!R){ sttStatus.textContent='STT: unsupported'; return; }
-      rec = new R(); sttSupported=true;
-      rec.lang='en-IN'; rec.interimResults=false; rec.maxAlternatives=1;
-      rec.onstart=()=>{ recognizing=true; micBtn.textContent='🛑'; sttStatus.textContent='STT: listening'; };
-      rec.onend=()=>{ recognizing=false; micBtn.textContent='🎤'; sttStatus.textContent='STT: ready'; };
-      rec.onerror=(e)=>{ recognizing=false; sttStatus.textContent='STT: error'; console.warn(e); };
-      rec.onresult=(e)=>{
-        const val = e.results[0][0].transcript; inputEl.value = val; handleSend();
-      };
-    }
-    initSTT();
-
-    micBtn.onclick = ()=>{
-      if(!sttSupported){ addMsg('bot','Voice input not supported in this browser. Please type.'); return; }
-      if(!recognizing) rec.start(); else rec.stop();
+    micBtn.onclick = () => {
+      recognition.start();
+      micBtn.textContent = "🎙️";
     };
 
-    /* ------------------ Send flow ------------------ */
-    function handleSend(){
-      const q = inputEl.value.trim(); if(!q) return;
-      addMsg('user', q);
-      inputEl.value='';
-      const a = replyFor(q);
-      addMsg('bot', a);
-      speak(a);
-    }
+    recognition.onresult = (event) => {
+      const voiceText = event.results[0][0].transcript;
+      micBtn.textContent = "🎤";
+      sendMessage(voiceText);
+    };
 
-    sendBtn.onclick = handleSend;
-    inputEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ handleSend(); }});
-    speakBtn.onclick = ()=>{ if(lastBotReply) speak(lastBotReply); };
-  </script>
+    recognition.onend = () => {
+      micBtn.textContent = "🎤";
+    };
+  } else {
+    micBtn.style.display = "none";
+  }
+</script>
+
 </body>
 </html>
