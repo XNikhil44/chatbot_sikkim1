@@ -5,14 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sikkim Tourism Chatbot</title>
   <style>
+    /* General Styling */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: #f8f9fa;
+      background: linear-gradient(to right, #e0f7fa, #fff3e0);
+      color: #333;
     }
 
-    /* Floating Button */
+    header {
+      background: #00695c;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.2em;
+    }
+
+    nav {
+      background: #004d40;
+      text-align: center;
+      padding: 10px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    main {
+      padding: 30px;
+      text-align: center;
+    }
+
+    main h2 {
+      color: #00695c;
+    }
+
+    .tourism-img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
+    }
+
+    footer {
+      background: #00695c;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      margin-top: 30px;
+    }
+
+    /* Floating Chatbot Button */
     .chatbot-btn {
       position: fixed;
       bottom: 20px;
@@ -21,13 +78,12 @@
       color: white;
       border: none;
       border-radius: 50%;
-      width: 65px;
-      height: 65px;
-      font-size: 28px;
+      width: 60px;
+      height: 60px;
+      font-size: 30px;
       cursor: pointer;
-      box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease-in-out;
-      z-index: 1000;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
     }
 
     .chatbot-btn:hover {
@@ -35,89 +91,87 @@
       background: #20b954;
     }
 
-    /* Chatbot container */
+    /* Chatbot Container */
     #chatbot-container {
       display: none;
       position: fixed;
-      bottom: 95px;
+      bottom: 90px;
       right: 20px;
-      width: 370px;
-      height: 520px;
+      width: 350px;
+      height: 500px;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0px 6px 20px rgba(0,0,0,0.4);
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
       z-index: 1000;
-      background: white;
-      flex-direction: column;
     }
 
-    /* Chatbot header */
-    .chatbot-header {
-      background: #00695c;
-      color: white;
-      padding: 10px;
-      font-size: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .chatbot-header .close-btn {
-      background: transparent;
-      border: none;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    /* Chat messages container */
-    #chatBox {
-      flex: 1;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    #chatBox iframe {
+    iframe {
       width: 100%;
       height: 100%;
       border: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      main {
+        padding: 15px;
+      }
+
+      .tourism-img {
+        max-height: 250px;
+      }
+
+      #chatbot-container {
+        width: 90%;
+        height: 70%;
+        right: 5%;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Floating Button -->
+  <header>
+    <h1>Welcome to Sikkim Tourism</h1>
+    <p>Explore the beauty of the Himalayas with our smart chatbot guide</p>
+  </header>
+
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Places</a>
+    <a href="#">Culture</a>
+    <a href="#">Contact</a>
+  </nav>
+
+  <main>
+    <h2>Discover Sikkim</h2>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Tsomgo_Lake%2C_Sikkim.jpg" alt="Sikkim Tourism" class="tourism-img">
+    <p>
+      Sikkim is a small but breathtakingly beautiful state in India, known for its majestic Himalayas, 
+      rich culture, monasteries, and natural wonders. Our chatbot will guide you through your journey, 
+      answer your queries, and suggest the best places to explore.
+    </p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sikkim Tourism | All Rights Reserved</p>
+  </footer>
+
+  <!-- Floating Chatbot Button -->
   <button class="chatbot-btn" onclick="toggleChat()">💬</button>
 
   <!-- Chatbot Container -->
   <div id="chatbot-container">
-    <div class="chatbot-header">
-      <span>Sikkim Chatbot</span>
-      <button class="close-btn" onclick="toggleChat()">✖</button>
-    </div>
-    <div id="chatBox">
-      <!-- Embedded Hugging Face Space -->
-      <iframe
-        src="https://nikhil262-sikkim-chatbot.hf.space?embed=1"
-        allow="autoplay"
-      ></iframe>
-    </div>
+    <iframe src="https://www.chatbase.co/chatbot-iframe/WXJl80MOoH850gYH_yXdl"></iframe>
   </div>
 
   <script>
     function toggleChat() {
-      const chatbot = document.getElementById("chatbot-container");
-      chatbot.style.display = chatbot.style.display === "flex" ? "none" : "flex";
-      if(chatbot.style.display === "flex") {
-        chatbot.style.display = "flex";
-      }
+      const chatbot = document.getElementById('chatbot-container');
+      chatbot.style.display = chatbot.style.display === 'block' ? 'none' : 'block';
     }
-
-    // Optional: Voice reply for Space responses (works only if your Space outputs text to front)
-    // You can enhance it later by connecting to API for dynamic speech
   </script>
 
 </body>
 </html>
+
