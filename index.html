@@ -1,33 +1,177 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Chatbot Test</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sikkim Tourism Chatbot</title>
+  <style>
+    /* General Styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #e0f7fa, #fff3e0);
+      color: #333;
+    }
+
+    header {
+      background: #00695c;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.2em;
+    }
+
+    nav {
+      background: #004d40;
+      text-align: center;
+      padding: 10px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    main {
+      padding: 30px;
+      text-align: center;
+    }
+
+    main h2 {
+      color: #00695c;
+    }
+
+    .tourism-img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.3);
+    }
+
+    footer {
+      background: #00695c;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      margin-top: 30px;
+    }
+
+    /* Floating Chatbot Button */
+    .chatbot-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #25d366;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 30px;
+      cursor: pointer;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    .chatbot-btn:hover {
+      transform: scale(1.1);
+      background: #20b954;
+    }
+
+    /* Chatbot Container */
+    #chatbot-container {
+      display: none;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 350px;
+      height: 500px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
+      z-index: 1000;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      main {
+        padding: 15px;
+      }
+
+      .tourism-img {
+        max-height: 250px;
+      }
+
+      #chatbot-container {
+        width: 90%;
+        height: 70%;
+        right: 5%;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Chatbot</h1>
-  <input type="text" id="userMsg" placeholder="Type your message" />
-  <button onclick="sendMessage()">Send</button>
-  <div id="response"></div>
+
+  <header>
+    <h1>Welcome to Sikkim Tourism</h1>
+    <p>Explore the beauty of the Himalayas with our smart chatbot guide</p>
+  </header>
+
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Places</a>
+    <a href="#">Culture</a>
+    <a href="#">Contact</a>
+  </nav>
+
+  <main>
+    <h2>Discover Sikkim</h2>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/Tsomgo_Lake%2C_Sikkim.jpg" alt="Sikkim Tourism" class="tourism-img">
+    <p>
+      Sikkim is a small but breathtakingly beautiful state in India, known for its majestic Himalayas, 
+      rich culture, monasteries, and natural wonders. Our chatbot will guide you through your journey, 
+      answer your queries, and suggest the best places to explore.
+    </p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sikkim Tourism | All Rights Reserved</p>
+  </footer>
+
+  <!-- Floating Chatbot Button -->
+  <button class="chatbot-btn" onclick="toggleChat()">💬</button>
+
+  <!-- Chatbot Container -->
+  <div id="chatbot-container">
+    <iframe src="https://www.chatbase.co/chatbot-iframe/WXJl80MOoH850gYH_yXdl"></iframe>
+  </div>
 
   <script>
-    const HF_TOKEN = "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"; // yahan token daalo
-
-    async function sendMessage() {
-      const msg = document.getElementById('userMsg').value;
-      const resDiv = document.getElementById('response');
-
-      const r = await fetch("https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${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}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ inputs: msg, parameters: { max_new_tokens: 150 } })
-      });
-
-      const data = await r.json();
-      resDiv.innerText = data?.[0]?.generated_text || JSON.stringify(data);
+    function toggleChat() {
+      const chatbot = document.getElementById('chatbot-container');
+      chatbot.style.display = chatbot.style.display === 'block' ? 'none' : 'block';
     }
   </script>
+
 </body>
 </html>
+
